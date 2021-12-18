@@ -830,8 +830,11 @@ class _AddAaslState extends State<AddAasl> {
                                           long ?? 2.23332,
                                           _descriptionController.text,
                                           "",
-                                          supplierDataId[indexOfAssetSupplier]
-                                              .toString(),
+                                          supplierDataId.isNotEmpty
+                                              ? supplierDataId[
+                                                      indexOfAssetSupplier]
+                                                  .toString()
+                                              : null,
                                           locationDataId[indexOfAssetLocation]
                                               .toString());
                                     });
@@ -907,8 +910,11 @@ class _AddAaslState extends State<AddAasl> {
                                           long ?? 2.23332,
                                           _descriptionController.text,
                                           "",
-                                          supplierDataId[indexOfAssetSupplier]
-                                              .toString(),
+                                          supplierDataId.isNotEmpty
+                                              ? supplierDataId[
+                                                      indexOfAssetSupplier]
+                                                  .toString()
+                                              : null,
                                           locationDataId[indexOfAssetLocation]
                                               .toString());
                                     });

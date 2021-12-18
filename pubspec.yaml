@@ -34,6 +34,8 @@ dependencies:
   google_map_location_picker:
     git:
       url: git://github.com/lyokone/google_map_location_picker.git
+  flutter_localizations:
+    sdk: flutter
   path_provider_platform_interface: ^2.0.0
   plugin_platform_interface: ^2.0.2
   geolocator: ^7.6.2

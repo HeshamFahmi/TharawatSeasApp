@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_map_location_picker/generated/l10n.dart';
 import 'homePage.dart';
 import 'scanqr.dart';
 import 'generated/locale_keys.g.dart';
@@ -32,7 +34,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: LocaleKeys.AppName.tr(),
       debugShowCheckedModeBanner: false,
-      localizationsDelegates: EasyLocalization.of(context).delegates,
+      localizationsDelegates: [
+        S.delegate,
+        EasyLocalization.of(context).delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       supportedLocales: EasyLocalization.of(context).supportedLocales,
       locale: EasyLocalization.of(context).locale,
       theme: ThemeData(
