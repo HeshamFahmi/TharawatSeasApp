@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 class DetailsModel {
   String responseCode;
   String responseStatus;

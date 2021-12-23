@@ -3,7 +3,7 @@ class SupModel {
   String responseStatus;
   String responseMessage;
   List<ResponseData> responseData;
-  Null responseCount;
+  String responseCount;
 
   SupModel(
       {this.responseCode,
@@ -46,10 +46,10 @@ class ResponseData {
   bool isActive;
   bool isDeleted;
   String createdBy;
-  Null deletedBy;
+  String deletedBy;
   String createdDate;
-  Null updatedBy;
-  Null updatedDate;
+  String updatedBy;
+  String updatedDate;
 
   ResponseData(
       {this.assetStatusId,

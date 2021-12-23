@@ -3,7 +3,7 @@ class LocationModel {
   String responseStatus;
   String responseMessage;
   List<ResponseData> responseData;
-  Null responseCount;
+  String responseCount;
 
   LocationModel(
       {this.responseCode,

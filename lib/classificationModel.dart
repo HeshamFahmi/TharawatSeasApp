@@ -3,7 +3,7 @@ class ClassificationModel {
   String responseStatus;
   String responseMessage;
   List<ResponseData> responseData;
-  Null responseCount;
+  String responseCount;
 
   ClassificationModel(
       {this.responseCode,
@@ -48,7 +48,7 @@ class ResponseData {
   String createdBy;
   String createdDate;
   String updatedBy;
-  Null updatedDate;
+  String updatedDate;
   String parentClassificationId;
 
   ResponseData(

@@ -3,8 +3,8 @@ class CommitteeModel {
   String responseStatus;
   String responseMessage;
   List<ResponseData> responseData;
-  Null responseCount;
-  Null responseAdditionalData;
+  String responseCount;
+  String responseAdditionalData;
 
   CommitteeModel(
       {this.responseCode,
@@ -49,10 +49,10 @@ class ResponseData {
   String committeeNameEn;
   bool isActive;
   bool isDeleted;
-  Null createdBy;
+  String createdBy;
   String createdDate;
-  Null updatedBy;
-  Null updatedDate;
+  String updatedBy;
+  String updatedDate;
 
   ResponseData({
     this.committeeId,

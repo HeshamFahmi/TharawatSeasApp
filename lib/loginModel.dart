@@ -4,7 +4,7 @@ class LoginModel {
   String responseMessage;
   ResponseData responseData;
   String responseToken;
-  Null responseCount;
+  String responseCount;
   List<ResponseAdditionalData> responseAdditionalData;
 
   LoginModel(
@@ -61,8 +61,8 @@ class ResponseData {
   String userName;
   String email;
   String phoneNumber;
-  Null userGroupNameAr;
-  Null userGroupNameEn;
+  String userGroupNameAr;
+  String userGroupNameEn;
 
   ResponseData(
       {this.userId,

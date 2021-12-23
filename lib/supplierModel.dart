@@ -3,7 +3,7 @@ class SupplierModel {
   String responseStatus;
   String responseMessage;
   List<ResponseData> responseData;
-  Null responseCount;
+  String responseCount;
 
   SupplierModel(
       {this.responseCode,
@@ -51,10 +51,10 @@ class ResponseData {
   String activityType;
   bool isActive;
   bool isDeleted;
-  Null createdBy;
-  Null createdDate;
+  String createdBy;
+  String createdDate;
   String updatedBy;
-  Null updatedDate;
+  String updatedDate;
 
   ResponseData(
       {this.supplierId,

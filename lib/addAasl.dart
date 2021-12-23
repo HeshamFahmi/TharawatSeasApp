@@ -330,6 +330,8 @@ class _AddAaslState extends State<AddAasl> {
       SupplierModel strings =
           SupplierModel.fromJson(json.decode(response.body));
 
+      print(response.body);
+
       for (var i = 0; i < strings.responseData.length; i++) {
         supplierData.add(strings.responseData[i].supplierNameAr);
         supplierDataId.add(strings.responseData[i].supplierId);
