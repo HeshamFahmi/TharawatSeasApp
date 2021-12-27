@@ -62,6 +62,7 @@ class ResponseData {
   bool isDeleted;
   bool isActive;
   String assetImage;
+  bool isExist;
 
   ResponseData(
       {this.assetId,
@@ -78,7 +79,8 @@ class ResponseData {
       this.locationCode,
       this.isDeleted,
       this.isActive,
-      this.assetImage});
+      this.assetImage,
+      this.isExist});
 
   ResponseData.fromJson(Map<String, dynamic> json) {
     assetId = json['assetId'];
@@ -96,6 +98,7 @@ class ResponseData {
     isDeleted = json['isDeleted'];
     isActive = json['isActive'];
     assetImage = json['assetImage'];
+    isExist = json['isExist'];
   }
 
   Map<String, dynamic> toJson() {
@@ -115,6 +118,7 @@ class ResponseData {
     data['isDeleted'] = this.isDeleted;
     data['isActive'] = this.isActive;
     data['assetImage'] = this.assetImage;
+    data['isExist'] = this.isExist;
     return data;
   }
 }

@@ -31,32 +31,34 @@ class _AslDetailsState extends State<AslDetails> {
           ),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            cellText(LocaleKeys.AssetnameAr.tr(),
-                widget.astDetails.assetNameAr.toString()),
-            cellText(LocaleKeys.AssetnameEn.tr(),
-                widget.astDetails.assetNameEn.toString()),
-            cellText(LocaleKeys.BarCode.tr(),
-                widget.astDetails.assetBarcode.toString()),
-            cellText(LocaleKeys.Location.tr(),
-                widget.astDetails.locationNameAr.toString()),
-            cellText(LocaleKeys.Status.tr(),
-                widget.astDetails.assetStatusNameAr.toString()),
-            widget.astDetails.assetDescription == null
-                ? Container()
-                : cellText(LocaleKeys.AssetDescription.tr(),
-                    widget.astDetails.assetDescription.toString()),
-            cellText(LocaleKeys.Price.tr(),
-                widget.astDetails.purchasePrice.toString()),
-            cellText(
-                LocaleKeys.Date.tr(),
-                myFormat.format(
-                    DateTime.parse(widget.astDetails.purchaseDate.toString()))),
-            cellText(LocaleKeys.Classification.tr(),
-                widget.astDetails.classificationNameAr.toString()),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              cellText(LocaleKeys.AssetnameAr.tr(),
+                  widget.astDetails.assetNameAr.toString()),
+              cellText(LocaleKeys.AssetnameEn.tr(),
+                  widget.astDetails.assetNameEn.toString()),
+              cellText(LocaleKeys.BarCode.tr(),
+                  widget.astDetails.assetBarcode.toString()),
+              cellText(LocaleKeys.Location.tr(),
+                  widget.astDetails.locationNameAr.toString()),
+              cellText(LocaleKeys.Status.tr(),
+                  widget.astDetails.assetStatusNameAr.toString()),
+              widget.astDetails.assetDescription == null
+                  ? Container()
+                  : cellText(LocaleKeys.AssetDescription.tr(),
+                      widget.astDetails.assetDescription.toString()),
+              cellText(LocaleKeys.Price.tr(),
+                  widget.astDetails.purchasePrice.toString()),
+              cellText(
+                  LocaleKeys.Date.tr(),
+                  myFormat.format(DateTime.parse(
+                      widget.astDetails.purchaseDate.toString()))),
+              cellText(LocaleKeys.Classification.tr(),
+                  widget.astDetails.classificationNameAr.toString()),
+            ],
+          ),
         ),
       ),
       appBar: buildAppBar(context),

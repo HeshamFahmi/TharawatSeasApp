@@ -336,7 +336,9 @@ class _GaardState extends State<Gaard> {
                                         committeeId:
                                             commiteDataId[indexOfCommittee]
                                                 .toString(),
-                                        gaardNotes: _text.text.toString(),
+                                        gaardNotes: _text.text.isEmpty
+                                            ? " "
+                                            : _text.text.toString(),
                                       );
                                     },
                                   ),

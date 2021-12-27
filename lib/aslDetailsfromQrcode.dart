@@ -48,36 +48,39 @@ class _AslDetailsFromQrCodesState extends State<AslDetailsFromQrCodes> {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  cellText(LocaleKeys.AssetnameAr.tr(),
-                      detalisModel.responseData.assetNameAr.toString()),
-                  cellText(LocaleKeys.AssetnameEn.tr(),
-                      detalisModel.responseData.assetNameEn.toString()),
-                  cellText(LocaleKeys.BarCode.tr(),
-                      detalisModel.responseData.assetBarcode.toString()),
-                  cellText(LocaleKeys.Location.tr(),
-                      detalisModel.responseData.locationNameAr.toString()),
-                  cellText(LocaleKeys.Status.tr(),
-                      detalisModel.responseData.assetStatusNameAr.toString()),
-                  detalisModel.responseData.assetDescription == null
-                      ? Container()
-                      : cellText(
-                          LocaleKeys.AssetDescription.tr(),
-                          detalisModel.responseData.assetDescription
-                              .toString()),
-                  cellText(LocaleKeys.Price.tr(),
-                      detalisModel.responseData.purchasePrice.toString()),
-                  cellText(
-                      LocaleKeys.Date.tr(),
-                      myFormat.format(DateTime.parse(
-                          detalisModel.responseData.purchaseDate.toString()))),
-                  cellText(
-                      LocaleKeys.Classification.tr(),
-                      detalisModel.responseData.classificationNameAr
-                          .toString()),
-                ],
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    cellText(LocaleKeys.AssetnameAr.tr(),
+                        detalisModel.responseData.assetNameAr.toString()),
+                    cellText(LocaleKeys.AssetnameEn.tr(),
+                        detalisModel.responseData.assetNameEn.toString()),
+                    cellText(LocaleKeys.BarCode.tr(),
+                        detalisModel.responseData.assetBarcode.toString()),
+                    cellText(LocaleKeys.Location.tr(),
+                        detalisModel.responseData.locationNameAr.toString()),
+                    cellText(LocaleKeys.Status.tr(),
+                        detalisModel.responseData.assetStatusNameAr.toString()),
+                    detalisModel.responseData.assetDescription == null
+                        ? Container()
+                        : cellText(
+                            LocaleKeys.AssetDescription.tr(),
+                            detalisModel.responseData.assetDescription
+                                .toString()),
+                    cellText(LocaleKeys.Price.tr(),
+                        detalisModel.responseData.purchasePrice.toString()),
+                    cellText(
+                        LocaleKeys.Date.tr(),
+                        myFormat.format(DateTime.parse(detalisModel
+                            .responseData.purchaseDate
+                            .toString()))),
+                    cellText(
+                        LocaleKeys.Classification.tr(),
+                        detalisModel.responseData.classificationNameAr
+                            .toString()),
+                  ],
+                ),
               ),
             ),
       appBar: buildAppBar(context),

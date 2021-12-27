@@ -43,6 +43,7 @@ Future<SGModel> _futGSModel;
 
 class _GaardResultsState extends State<GaardResults> {
   List<TextEditingController> _controllers = new List();
+  List<bool> _checksresult = new List();
   final ItemScrollController _itemScrollController = ItemScrollController();
 
   void _scrollToIndex(int index) {
@@ -146,6 +147,7 @@ class _GaardResultsState extends State<GaardResults> {
 
   @override
   Widget build(BuildContext context) {
+    print(widget.gaardNotes + "::this is gaard note");
     return Scaffold(
         appBar: AppBar(
           backgroundColor: mPrimaryTextColor,
@@ -159,7 +161,6 @@ class _GaardResultsState extends State<GaardResults> {
                 : GestureDetector(
                     onTap: () {
                       FocusScope.of(context).unfocus();
-                      // FocusScope.of(context).requestFocus(new FocusNode());
                     },
                     child: SingleChildScrollView(
                       child: Center(
@@ -226,27 +227,6 @@ class _GaardResultsState extends State<GaardResults> {
                                       borderRadius: BorderRadius.circular(10.0),
                                     ),
                                     prefixIcon: Icon(Icons.search_rounded),
-                                    // suffixIcon: InkWell(
-                                    //     onTap: () {
-                                    //       // filtterlist.clear();
-                                    //       // setState(() {
-                                    //       //   for (int i = 0;
-                                    //       //       i <
-                                    //       //           gaardResultFuture
-                                    //       //               .responseData.length;
-                                    //       //       i++) {
-                                    //       //     if (gaardResultFuture
-                                    //       //         .responseData[i].assetNameAr
-                                    //       //         .contains(seco.text)) {
-                                    //       //       filtterlist.add(gaardResultFuture
-                                    //       //           .responseData[i]);
-                                    //       //       print(
-                                    //       //           "--------------added----------");
-                                    //       //     }
-                                    //       //   }
-                                    //       // });
-                                    //     },
-                                    //     child: Icon(Icons.search)),
                                     filled: true,
                                     hintStyle:
                                         TextStyle(color: Colors.grey[800]),
@@ -276,11 +256,78 @@ class _GaardResultsState extends State<GaardResults> {
             addRepaintBoundaries: true,
             scrollDirection: Axis.vertical,
             itemBuilder: (context, index) {
-              return GardCell(
-                barCode: items[index].assetBarcode,
-                controller: _controllers[index],
-                name: items[index].assetNameAr,
-                state: items[index].isActive,
+              print("updated Checks : " + _checksresult[index].toString());
+              return Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: 10,
+                        ),
+                        IntrinsicHeight(
+                            child: Padding(
+                          padding: const EdgeInsets.fromLTRB(10.0, 0, 10.0, 0),
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.blue[
+                                  100], //Colors.cyanAccent.withOpacity(0.5),
+                              border: Border.all(
+                                color: Colors.grey[600],
+                              ),
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                cellText(
+                                    LocaleKeys.AssetName.tr(),
+                                    gaardResultFuture
+                                        .responseData[index].assetNameAr),
+                                cellText(
+                                    LocaleKeys.BarCode.tr(),
+                                    gaardResultFuture
+                                        .responseData[index].assetBarcode),
+                                Row(
+                                  children: <Widget>[
+                                    Ctxt("IsExist : ", mPrimaryTextColor),
+                                    Checkbox(
+                                      value: _checksresult[index],
+                                      onChanged: (bool value) {
+                                        setState(() {
+                                          _checksresult[index] = value;
+                                          print(value.toString());
+                                          print("recieved value : " +
+                                              _checksresult[index].toString());
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: TextField(
+                                    controller: _controllers[index],
+                                    minLines: 2,
+                                    maxLines: 5,
+                                    decoration: InputDecoration(
+                                      border: OutlineInputBorder(),
+                                      labelText: LocaleKeys.AddNotes.tr(),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ))
+                      ],
+                    )
+                  ],
+                ),
               );
             }),
       ),
@@ -300,16 +347,18 @@ class _GaardResultsState extends State<GaardResults> {
             for (var i = 0; i < gaardResultFuture.responseData.length; i++) {
               assetMap.add({
                 "AssetId": gaardResultFuture.responseData[i].assetId.toString(),
-                "IsExists": gaardResultFuture.responseData[i].isActive,
-                "AssetNote": _controllers[i].text.toString()
+                "IsExists": _checksresult[i],
+                "AssetNote": _controllers[i].text.isEmpty
+                    ? " "
+                    : _controllers[i].text.toString()
               });
             }
 
-            print(assetMap);
+            print(json.encode(assetMap));
+            Future.delayed(Duration(seconds: 1));
             setState(() {
               _futGSModel = saveGData(assetMap);
             });
-
             assetMap.clear();
           },
           child: Container(
@@ -361,13 +410,13 @@ class _GaardResultsState extends State<GaardResults> {
 
       for (var i = 0; i < gaardResultFuture.responseData.length; i++) {
         _controllers.add(new TextEditingController());
-        isact.add(
-            gaardResultFuture.responseData[i].isActive == true ? true : false);
+        _checksresult.add(gaardResultFuture.responseData[i].isExist);
+
         recievedAssetsId
-            .add(gaardResultFuture.responseData[i].assetId.toString().trim());
+            .add(gaardResultFuture.responseData[i].assetId.toString());
       }
 
-      print(assetMap);
+      print("before update : " + assetMap.toString());
 
       setState(() {
         loading = false;
@@ -458,6 +507,34 @@ class _GaardResultsState extends State<GaardResults> {
                 )
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget cellText(String lable, String txt) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Ctxt(lable, mPrimaryTextColor),
+        Ctxt(":", Colors.black),
+        Ctxt(txt, mSecondTextColor)
+      ],
+    );
+  }
+
+  // ignore: non_constant_identifier_names
+  Widget Ctxt(String txt, Color color) {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          txt,
+          style: TextStyle(
+            color: color,
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

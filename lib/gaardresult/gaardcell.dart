@@ -18,8 +18,6 @@ class GardCell extends StatefulWidget {
 }
 
 class _GardCellState extends State<GardCell> {
-  int index = 1;
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -61,6 +59,8 @@ class _GardCellState extends State<GardCell> {
                               setState(() {
                                 widget.state = value;
                                 print(value.toString());
+                                print("recieved value : " +
+                                    widget.state.toString());
                               });
                             },
                           ),
