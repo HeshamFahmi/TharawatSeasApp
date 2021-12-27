@@ -359,7 +359,6 @@ class _GaardResultsState extends State<GaardResults> {
             setState(() {
               _futGSModel = saveGData(assetMap);
             });
-            assetMap.clear();
           },
           child: Container(
             width: double.infinity,
@@ -426,7 +425,7 @@ class _GaardResultsState extends State<GaardResults> {
     }
   }
 
-  Future<SGModel> saveGData(List<Map<String, dynamic>> map) async {
+  Future<SGModel> saveGData(var map) async {
     final assetsData = {
       "InventoryId": "00000000-0000-0000-0000-000000000000",
       "InventoryCode": 0,
@@ -450,8 +449,10 @@ class _GaardResultsState extends State<GaardResults> {
     print("Save Response : " + response.body);
 
     if (response.statusCode == 200) {
+      print(map);
       print("Success");
       showToast(LocaleKeys.SavedSuccessfully.tr());
+      assetMap.clear();
       return SGModel.fromJson(jsonDecode(response.body));
     } else {
       showToast("Failed");
