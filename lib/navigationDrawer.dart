@@ -45,12 +45,12 @@ class NavigationDrawer extends StatelessWidget {
             onTap: () =>
                 Navigator.pushReplacementNamed(context, PageRoutes.addAsal),
           ),
-          createDrawerBodyItem(
-            icon: Icons.scanner,
-            text: LocaleKeys.scanQrCode.tr(),
-            onTap: () =>
-                Navigator.pushReplacementNamed(context, PageRoutes.scanqr),
-          ),
+          // createDrawerBodyItem(
+          //   icon: Icons.scanner,
+          //   text: LocaleKeys.scanQrCode.tr(),
+          //   onTap: () =>
+          //       Navigator.pushReplacementNamed(context, PageRoutes.scanqr),
+          // ),
           createDrawerBodyItem(
               icon: Icons.language_rounded,
               text: LocaleKeys.ChangeLanguage.tr(),

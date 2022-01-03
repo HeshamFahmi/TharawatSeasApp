@@ -5,6 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:search_choices/search_choices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'branchModel.dart';
 import 'committeeModel.dart';
 import 'constant.dart';
 
@@ -28,11 +29,16 @@ class _GaardState extends State<Gaard> {
   bool _validate = false;
 
   String _myLocationSelection;
+  String _mybrancheSelection;
   String _myLagnaSelection;
 
   List<String> locationsData = [];
   List<String> locationsDataID = [];
   var indexOfLocations;
+
+  List<String> branchesData = [];
+  List<String> branchesDataID = [];
+  var indexOfbranches;
 
   List<String> commiteData = [];
   List<String> commiteDataId = [];
@@ -40,20 +46,29 @@ class _GaardState extends State<Gaard> {
 
   bool loading = true;
 
+  Future<BranchModel> branchsDataFuture;
   Future<LocationModel> locationsDataFuture;
   Future<CommitteeModel> committeeDataFuture;
 
-  Future<LocationModel> getLocationsData() async {
+  Future<LocationModel> getLocationsbyBranchIdData(String branchId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('bearer');
-    var response = await http.get(
-        Uri.http('faragmosa-001-site16.itempurl.com',
-            '/api/InventoryApi/GetLocations'),
-        headers: {'Authorization': 'Bearer $token'});
+    var headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json'
+    };
+    var request = http.Request(
+        'POST',
+        Uri.parse(
+            'http://faragmosa-001-site16.itempurl.com/api/LocationApi/GetLocationsByBranch'));
+    request.body = json.encode({"BranchId": branchId});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
 
     if (response.statusCode == 200) {
-      LocationModel strings =
-          LocationModel.fromJson(json.decode(response.body));
+      LocationModel strings = LocationModel.fromJson(
+          json.decode(await response.stream.bytesToString()));
 
       for (var i = 0; i < strings.responseData.length; i++) {
         locationsData.add(strings.responseData[i].locationNameAr);
@@ -67,7 +82,48 @@ class _GaardState extends State<Gaard> {
         loading = false;
       });
 
-      return LocationModel.fromJson(json.decode(response.body));
+      // return LocationModel.fromJson(
+      //     json.decode(await response.stream.bytesToString()));
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  Future<BranchModel> getLocationsData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('bearer');
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'http://faragmosa-001-site16.itempurl.com/api/LocationApi/GetAllLocations'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      BranchModel strings = BranchModel.fromJson(
+          json.decode(await response.stream.bytesToString()));
+
+      for (var i = 0; i < strings.responseData.length; i++) {
+        if (strings.responseData[i].branchId == null) {
+          print("null");
+        } else {
+          branchesData.add(strings.responseData[i].branchNameAr);
+          branchesDataID.add(strings.responseData[i].branchId);
+        }
+      }
+
+      print(branchesData.toString());
+      print(branchesDataID.toString());
+
+      setState(() {
+        loading = false;
+      });
+
+      // return BranchModel.fromJson(
+      //     json.decode(await response.stream.bytesToString()));
     } else {
       throw Exception('Failed to load');
     }
@@ -105,7 +161,8 @@ class _GaardState extends State<Gaard> {
 
   @override
   void initState() {
-    locationsDataFuture = getLocationsData();
+    branchsDataFuture = getLocationsData();
+
     committeeDataFuture = getCommitteeData();
     super.initState();
   }
@@ -163,16 +220,6 @@ class _GaardState extends State<Gaard> {
                         SizedBox(
                           height: 20,
                         ),
-                        /*Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Text(
-                          LocaleKeys.Gaard.tr(),
-                          style: TextStyle(
-                              color: mPrimaryTextColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 30),
-                        ),
-                      ),*/
                         Padding(
                           padding: const EdgeInsets.all(10.0),
                           child: Container(
@@ -183,7 +230,7 @@ class _GaardState extends State<Gaard> {
                                 border: Border.all(color: Colors.grey),
                                 borderRadius: BorderRadius.circular(20.0)),
                             child: SearchChoices.single(
-                              items: locationsData.map((String value) {
+                              items: branchesData.map((String value) {
                                 return new DropdownMenuItem<String>(
                                   value: value,
                                   child: Padding(
@@ -192,61 +239,78 @@ class _GaardState extends State<Gaard> {
                                   ),
                                 );
                               }).toList(),
-                              value: _myLocationSelection,
-                              hint: LocaleKeys.Location.tr(),
+                              value: _mybrancheSelection,
+                              hint: EasyLocalization.of(context).locale ==
+                                      Locale("en")
+                                  ? "Branch"
+                                  : "الفرع",
                               searchHint: "Select one",
                               onChanged: (String newValue) {
                                 setState(() {
-                                  _myLocationSelection = newValue;
+                                  _mybrancheSelection = newValue;
 
-                                  print(_myLocationSelection);
+                                  print(_mybrancheSelection);
 
-                                  indexOfLocations =
-                                      locationsData.indexOf(newValue);
+                                  indexOfbranches =
+                                      branchesData.indexOf(newValue);
+
+                                  print(branchesDataID[indexOfbranches]);
+
+                                  setState(() {
+                                    loading = true;
+                                    locationsData.clear();
+                                    locationsDataID.clear();
+                                    getLocationsbyBranchIdData(
+                                        branchesDataID[indexOfbranches]);
+                                    loading = false;
+                                  });
                                 });
                               },
                               isExpanded: true,
                             ),
                           ),
                         ),
-                        // Padding(
-                        //   padding: const EdgeInsets.all(10.0),
-                        //   child: Container(
-                        //     width: double.infinity,
-                        //     padding: EdgeInsets.only(right: 10, left: 10),
-                        //     decoration: BoxDecoration(
-                        //         color: Colors.white,
-                        //         border: Border.all(color: Colors.grey),
-                        //         borderRadius: BorderRadius.circular(20.0)),
-                        //     child: DropdownButton<String>(
-                        //       underline: new Container(),
-                        //       style: TextStyle(
-                        //           color: mPrimaryTextColor,
-                        //           fontWeight: FontWeight.bold,
-                        //           fontSize: 20),
-                        //       hint: Padding(
-                        //         padding: const EdgeInsets.only(right: 10.0),
-                        //         child: Text(LocaleKeys.ChooseLocation.tr()),
-                        //       ),
-                        //       isExpanded: true,
-                        //       items: locationsData.map((String value) {
-                        //         return new DropdownMenuItem<String>(
-                        //           value: value,
-                        //           child: new Text(value),
-                        //         );
-                        //       }).toList(),
-                        //       value: _myLocationSelection,
-                        //       onChanged: (newValue) {
-                        //         setState(() {
-                        //           _myLocationSelection = newValue;
+                        locationsData.isEmpty
+                            ? Container()
+                            : Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.only(
+                                      right: 10, left: 10),
+                                  decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(color: Colors.grey),
+                                      borderRadius:
+                                          BorderRadius.circular(20.0)),
+                                  child: SearchChoices.single(
+                                    items: locationsData.map((String value) {
+                                      return new DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 10.0),
+                                          child: new Text(value),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    value: _myLocationSelection,
+                                    hint: LocaleKeys.Location.tr(),
+                                    searchHint: "Select one",
+                                    onChanged: (String newValue) {
+                                      setState(() {
+                                        _myLocationSelection = newValue;
 
-                        //           indexOfLocations =
-                        //               locationsData.indexOf(newValue);
-                        //         });
-                        //       },
-                        //     ),
-                        //   ),
-                        // ),
+                                        print(_myLocationSelection);
+
+                                        indexOfLocations =
+                                            locationsData.indexOf(newValue);
+                                      });
+                                    },
+                                    isExpanded: true,
+                                  ),
+                                ),
+                              ),
                         Padding(
                           padding: const EdgeInsets.all(10.0),
                           child: Container(

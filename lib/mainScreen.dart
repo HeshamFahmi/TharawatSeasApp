@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:search_choices/search_choices.dart';
 import 'package:tharawatseas/DetailsModel.dart' as asde;
+import 'package:tharawatseas/editAsset.dart';
 import 'HBmodel.dart' as ashm;
 
 import 'aslDetailsfromQrcode.dart';
@@ -94,7 +95,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   getDataFromApi(int pageNo) async {
-    loading = true;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('bearer');
     var headers = {
@@ -184,40 +184,37 @@ class _MainScreenState extends State<MainScreen> {
           },
         );
       }
-
-      // // if (qrResult == "-1") {
-      // //   Navigator.push(
-      // //     context,
-      // //     MaterialPageRoute(
-      // //       builder: (context) {
-      // //         return HomePage();
-      // //       },
-      // //     ),
-      // //   );
-      // // } else {
-      // //   var result = json.decode(qrResult);
-
-      // //   Navigator.push(context, MaterialPageRoute(builder: (context) {
-      // //     return AslDetailsFromQr(
-      // //       assetNameAr: result["assetNameAr"].toString(),
-      // //       assetNameEn: result["assetNameEn"].toString(),
-      // //       classificationNameAr: result["classificationNameAr"].toString(),
-      // //       classificationNameEn: result["classificationNameEn"].toString(),
-      // //       purchaseDate: result["purchaseDate"].toString(),
-      // //       purchasePrice: result["purchasePrice"].toString(),
-      // //       assetDescription: result["assetDescription"].toString(),
-      // //     );
-      // //   }));
-
-      // //   if (!mounted) return;
-
-      // //   setState(() {
-      // //     this.barcode = qrResult;
-      // //     print(result);
-      // //   });
-      // }
     } on PlatformException {
       barcode = 'Failed';
+    }
+  }
+
+  deleteAsset(String assetId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('bearer');
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'http://faragmosa-001-site16.itempurl.com/api/AssetApi/DeleteAsset/$assetId'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      print(await response.stream.bytesToString());
+      showToast("Asset Deleted Successfully");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) {
+            return MainScreen();
+          },
+        ),
+      );
+    } else {
+      print(response.reasonPhrase);
     }
   }
 
@@ -288,7 +285,7 @@ class _MainScreenState extends State<MainScreen> {
       drawer: NavigationDrawer(),
       body: loading
           ? Center(child: CircularProgressIndicator())
-          : data.responseData.isEmpty
+          : data.responseData == null
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(10.0),
@@ -340,16 +337,7 @@ class _MainScreenState extends State<MainScreen> {
                         SizedBox(
                           height: 30,
                         ),
-                        // Text(
-                        //   LocaleKeys.Welcome.tr(),
-                        //   style: TextStyle(
-                        //       color: mPrimaryTextColor,
-                        //       fontSize: 20,
-                        //       fontWeight: FontWeight.bold),
-                        // ),
-                        // SizedBox(
-                        //   height: 20,
-                        // ),
+
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 30),
                           child: FlatButton(
@@ -522,7 +510,94 @@ class _MainScreenState extends State<MainScreen> {
                                               .format(DateTime.parse(data
                                                   .responseData[index]
                                                   .purchaseDate))
-                                              .toString())
+                                              .toString()),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              InkWell(
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) {
+                                                        return EditAsset(
+                                                          astDetails:
+                                                              data.responseData[
+                                                                  index],
+                                                        );
+                                                      },
+                                                    ),
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      color: mPrimaryTextColor),
+                                                  child: Icon(
+                                                    Icons.edit_rounded,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  AlertDialog alert =
+                                                      AlertDialog(
+                                                    title:
+                                                        Text("Delete Result"),
+                                                    content: Text(
+                                                        "Do You Want To Delete This Asset.."),
+                                                    actions: [
+                                                      FlatButton(
+                                                        child: Text("Yes"),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            deleteAsset(data
+                                                                .responseData[
+                                                                    index]
+                                                                .assetId
+                                                                .toString());
+                                                          });
+                                                        },
+                                                      ),
+                                                      FlatButton(
+                                                        child: Text("No"),
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                      ),
+                                                    ],
+                                                  );
+
+                                                  showDialog(
+                                                    context: context,
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return alert;
+                                                    },
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                    color: mSecondTextColor,
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.delete,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          )
                                         ],
                                       ),
                                     ),

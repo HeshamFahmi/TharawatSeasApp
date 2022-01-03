@@ -1,5 +1,6 @@
-import 'package:tharawatseas/profile.dart';
-import 'package:tharawatseas/scanqr.dart';
+import 'editAsset.dart';
+import 'profile.dart';
+import 'scanqr.dart';
 
 import 'addAasl.dart';
 import 'gaard.dart';
@@ -13,4 +14,5 @@ class PageRoutes {
   static const String addAsal = AddAasl.routeName;
   static const String scanqr = ScanScreen.routeName;
   static const String homepage = HomePage.routeName;
+  static const String editAsset = EditAsset.routeName;
 }

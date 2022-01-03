@@ -8,6 +8,7 @@ import 'package:google_map_location_picker/google_map_location_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:search_choices/search_choices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tharawatseas/basebarcodemodel.dart';
 import 'SDAssetModel.dart';
 import 'homePage.dart';
 import 'locationModel.dart';
@@ -20,19 +21,23 @@ import 'package:http/http.dart' as http;
 import 'supplierModel.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'HBmodel.dart' as hp;
 
-class AddAasl extends StatefulWidget {
-  static const String routeName = '/AddAasl';
+class EditAsset extends StatefulWidget {
+  static const String routeName = '/EditAsset';
+  final hp.ResponseData astDetails;
+
+  const EditAsset({Key key, this.astDetails}) : super(key: key);
 
   @override
-  _AddAaslState createState() => _AddAaslState();
+  _EditAssetState createState() => _EditAssetState();
 }
 
 // ignore: unused_element
 Future<SDModel> _futHSModel;
 double lat, long;
 
-class _AddAaslState extends State<AddAasl> {
+class _EditAssetState extends State<EditAsset> {
   PickedFile uploadImage;
   final _nameArabicController = TextEditingController();
   final _nameEnglishController = TextEditingController();
@@ -41,13 +46,14 @@ class _AddAaslState extends State<AddAasl> {
   final _report1Controller = TextEditingController();
   final _report2Controller = TextEditingController();
   final _barCodeController = TextEditingController();
-
-  String uploadedImageUrl;
+  final _assetbarCodeController = TextEditingController();
   //static final kInitialPosition = LatLng(-33.8567844, 151.213108);
   String _myAssetSupplierSelection;
   List<String> supplierData = [];
   List<String> supplierDataId = [];
   var indexOfAssetSupplier;
+
+  BasebarcodeModel basebarcodeModel;
 
   String _myAssetClassificationSelection;
   List<String> classificationData = [];
@@ -82,8 +88,7 @@ class _AddAaslState extends State<AddAasl> {
     http.StreamedResponse response = await request.send();
 
     if (response.statusCode == 200) {
-      uploadedImageUrl = await response.stream.bytesToString();
-      print(uploadedImageUrl);
+      print(await response.stream.bytesToString() + "----------------------");
     } else {
       print(
           "ssssssssssssssssssssss response.reasonPhrase:${response.reasonPhrase}");
@@ -208,6 +213,7 @@ class _AddAaslState extends State<AddAasl> {
       String assetNameEn,
       String classificationId,
       String assetBarcode,
+      String baseBarcode,
       String purchaseDate,
       double purchasePrice,
       double latitude,
@@ -221,8 +227,8 @@ class _AddAaslState extends State<AddAasl> {
       "AssetNameAr": assetNameAr,
       "AssetNameEn": assetNameEn,
       "ClassificationId": classificationId,
-      "AssetBarcode": "",
-      "BaseBarcode": assetBarcode,
+      "AssetBarcode": assetBarcode,
+      "BaseBarcode": baseBarcode,
       "PurchaseDate": purchaseDate,
       "PurchasePrice": purchasePrice,
       "Latitude": latitude,
@@ -231,11 +237,13 @@ class _AddAaslState extends State<AddAasl> {
       "Qrcode": qrcode,
       "SupplierId": supplierId,
       "LocationId": locationId,
-      "AssetImage": uploadedImageUrl == null ? "" : uploadedImageUrl
+      "isActive": true,
     };
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String token = prefs.getString('bearer');
+
+    print(token);
 
     final response = await http.post(Uri.parse(url),
         headers: <String, String>{
@@ -249,14 +257,16 @@ class _AddAaslState extends State<AddAasl> {
     //showLoadingDialog(context, _LoaderDialog);
 
     if (response.statusCode == 200) {
+      print(jsonEncode(assetsData));
       //Navigator.of(_LoaderDialog.currentContext, rootNavigator: true).pop();
+
       if (jsonDecode(response.body)["response_code"] == "500") {
         showDialog(
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
                 title: Text("Error"),
-                content: Text("Please Insert Base Barcode"),
+                content: Text(jsonDecode(response.body)["response_message"]),
                 actions: [
                   FlatButton(
                     child: Text("Ok"),
@@ -274,7 +284,7 @@ class _AddAaslState extends State<AddAasl> {
             builder: (BuildContext context) {
               return AlertDialog(
                 title: Text("Success"),
-                content: Text("Asset Added Successfully"),
+                content: Text("Asset Edited Successfully"),
                 actions: [
                   FlatButton(
                     child: Text("Ok"),
@@ -387,6 +397,23 @@ class _AddAaslState extends State<AddAasl> {
     }
   }
 
+  getbasebarcodebylocationid() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('bearer');
+    var response = await http.get(
+        Uri.http('faragmosa-001-site16.itempurl.com',
+            'api/ClassificationApi/getBasebarcode/${widget.astDetails.classificationId}'),
+        headers: {'Authorization': 'Bearer $token'});
+
+    if (response.statusCode == 200) {
+      //basebarcodeModel = jsonDecode(response.body);
+      basebarcodeModel = BasebarcodeModel.fromJson(jsonDecode(response.body));
+      print(basebarcodeModel.responseData);
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
   Future<ClassificationModel> assetsClassificationDataFuture;
   Future<SupplierModel> assetsSupplierDataFuture;
   Future<LocationModel> assetsLocationDataFuture;
@@ -398,6 +425,7 @@ class _AddAaslState extends State<AddAasl> {
     assetsClassificationDataFuture = getAssetClassificationData();
     assetsLocationDataFuture = getAssetLocationData();
     assetsSupplierDataFuture = getAssetSupplierData();
+    getbasebarcodebylocationid();
     super.initState();
   }
 
@@ -430,7 +458,7 @@ class _AddAaslState extends State<AddAasl> {
     return new Scaffold(
         appBar: AppBar(
             backgroundColor: mPrimaryTextColor,
-            title: Text(LocaleKeys.Add_Aasl.tr()),
+            title: Text("Edit Asset"),
             actions: [
               IconButton(
                   icon: Icon(
@@ -459,14 +487,22 @@ class _AddAaslState extends State<AddAasl> {
                   child: Center(
                       child: Column(
                     children: <Widget>[
-                      cTextField(LocaleKeys.AssetnameAr.tr(),
-                          _nameArabicController, _validate),
-                      cTextField(LocaleKeys.AssetnameEn.tr(),
-                          _nameEnglishController, _validate),
+                      cTextField(
+                        LocaleKeys.AssetnameAr.tr(),
+                        _nameArabicController
+                          ..text = widget.astDetails.assetNameAr,
+                        _validate,
+                      ),
+                      cTextField(
+                          LocaleKeys.AssetnameEn.tr(),
+                          _nameEnglishController
+                            ..text = widget.astDetails.assetNameEn,
+                          _validate),
                       Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: TextField(
-                          controller: _priceController,
+                          controller: _priceController
+                            ..text = widget.astDetails.purchasePrice.toString(),
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
@@ -482,6 +518,32 @@ class _AddAaslState extends State<AddAasl> {
                                 _validate ? LocaleKeys.ValueEmpty.tr() : null,
                           ),
                           keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: TextField(
+                          readOnly: true,
+                          controller: _assetbarCodeController
+                            ..text = widget.astDetails.assetBarcode,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20.0),
+                            ),
+                            labelStyle: TextStyle(
+                              color: mPrimaryTextColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            labelText: LocaleKeys.BarCode.tr(),
+                            errorText:
+                                _validate ? LocaleKeys.ValueEmpty.tr() : null,
+                          ),
+                          keyboardType: TextInputType.number,
+                          inputFormatters: <TextInputFormatter>[
+                            FilteringTextInputFormatter.digitsOnly
+                          ],
                         ),
                       ),
                       Container(
@@ -608,7 +670,8 @@ class _AddAaslState extends State<AddAasl> {
                                 Text(
                                   selectedDate != null
                                       ? formatter
-                                          .format(selectedDate)
+                                          .format(DateTime.parse(
+                                              widget.astDetails.purchaseDate))
                                           .toString()
                                       : LocaleKeys.EnterDate.tr(),
                                   style: TextStyle(
@@ -645,19 +708,12 @@ class _AddAaslState extends State<AddAasl> {
                                 ),
                               );
                             }).toList(),
-                            value: _myAssetClassificationSelection,
-                            onChanged: (String newValue) {
-                              setState(() {
-                                _myAssetClassificationSelection = newValue;
-
-                                indexOfAssetClassification =
-                                    classificationData.indexOf(newValue);
-                              });
-                            },
+                            value: widget.astDetails.classificationNameAr,
+                            onChanged: null,
                           ),
                         ),
                       ),
-                      indexOfAssetClassification == null
+                      basebarcodeModel == null
                           ? Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: TextField(
@@ -691,8 +747,7 @@ class _AddAaslState extends State<AddAasl> {
                                 readOnly: true,
                                 enabled: false,
                                 controller: _barCodeController
-                                  ..text = classificationBaseBarcode[
-                                      indexOfAssetClassification],
+                                  ..text = basebarcodeModel.responseData,
                                 decoration: InputDecoration(
                                   filled: true,
                                   fillColor: Colors.white,
@@ -738,10 +793,10 @@ class _AddAaslState extends State<AddAasl> {
                                 ),
                               );
                             }).toList(),
-                            value: _myAssetSupplierSelection,
+                            value: widget.astDetails.supplierNameAr,
                             onChanged: (String newValue) {
                               setState(() {
-                                _myAssetSupplierSelection = newValue;
+                                widget.astDetails.supplierNameAr = newValue;
 
                                 indexOfAssetSupplier =
                                     supplierData.indexOf(newValue);
@@ -769,12 +824,12 @@ class _AddAaslState extends State<AddAasl> {
                                 ),
                               );
                             }).toList(),
-                            value: _myAssetLocationSelection,
+                            value: widget.astDetails.locationNameAr,
                             hint: LocaleKeys.Location.tr(),
                             searchHint: "Select one",
                             onChanged: (String newValue) {
                               setState(() {
-                                _myAssetLocationSelection = newValue;
+                                widget.astDetails.locationNameAr = newValue;
 
                                 indexOfAssetLocation =
                                     locationData.indexOf(newValue);
@@ -787,7 +842,8 @@ class _AddAaslState extends State<AddAasl> {
                       Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: TextField(
-                          controller: _descriptionController,
+                          controller: _descriptionController
+                            ..text = widget.astDetails.assetDescription,
                           minLines: 5,
                           maxLines: 5,
                           decoration: InputDecoration(
@@ -806,156 +862,62 @@ class _AddAaslState extends State<AddAasl> {
                           ),
                         ),
                       ),
-                      cTextField(LocaleKeys.DeclarationOne.tr(),
-                          _report1Controller, _validate),
-                      cTextField(LocaleKeys.DeclarationTwo.tr(),
-                          _report2Controller, _validate),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
+                      cTextField(
+                        LocaleKeys.DeclarationOne.tr(),
+                        _report1Controller..text = "",
+                        _validate,
+                      ),
+                      cTextField(
+                        LocaleKeys.DeclarationTwo.tr(),
+                        _report2Controller..text = "",
+                        _validate,
+                      ),
+                      InkWell(
+                        onTap: () {
+                          setState(() {
+                            _futHSModel = saveData(
+                                widget.astDetails.assetId,
+                                _nameArabicController.text.toString(),
+                                _nameEnglishController.text.toString(),
+                                widget.astDetails.classificationId.toString(),
+                                widget.astDetails.assetBarcode,
+                                basebarcodeModel.responseData,
+                                formatter.format(selectedDate).toString(),
+                                double.parse(_priceController.text),
+                                lat ?? 20.332232,
+                                long ?? 2.23332,
+                                _descriptionController.text,
+                                "",
+                                indexOfAssetSupplier == null
+                                    ? widget.astDetails.supplierId
+                                    : supplierDataId.isNotEmpty
+                                        ? supplierDataId[indexOfAssetSupplier]
+                                            .toString()
+                                        : null,
+                                indexOfAssetLocation == null
+                                    ? widget.astDetails.locationId
+                                    : locationDataId[indexOfAssetLocation]
+                                        .toString());
+                          });
+                        },
                         child: Container(
-                          child: Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: RaisedButton(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      if (_nameArabicController.text.isEmpty) {
-                                        showToast("Please Enter Arabic name");
-                                        return;
-                                      }
-                                      if (_nameEnglishController.text.isEmpty) {
-                                        showToast("Please Enter English name");
-                                        return;
-                                      }
-                                      if (_priceController.text.isEmpty) {
-                                        showToast("Please Enter price");
-                                        return;
-                                      }
-                                      if (_barCodeController.text.isEmpty) {
-                                        showToast("Please Enter  Base Barcode");
-                                        return;
-                                      }
-                                      if (lat == null) {
-                                        showToast("Please Enter  location");
-                                        return;
-                                      }
-                                      _futHSModel = saveData(
-                                          "00000000-0000-0000-0000-000000000000",
-                                          _nameArabicController.text.toString(),
-                                          _nameEnglishController.text
-                                              .toString(),
-                                          classificationDataId[
-                                                  indexOfAssetClassification]
-                                              .toString(),
-                                          _barCodeController.text.toString(),
-                                          formatter
-                                              .format(selectedDate)
-                                              .toString(),
-                                          double.parse(_priceController.text),
-                                          lat ?? 20.332232,
-                                          long ?? 2.23332,
-                                          _descriptionController.text,
-                                          "",
-                                          supplierDataId.isNotEmpty
-                                              ? supplierDataId[
-                                                      indexOfAssetSupplier]
-                                                  .toString()
-                                              : null,
-                                          locationDataId[indexOfAssetLocation]
-                                              .toString());
-                                    });
-
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return HomePage();
-                                        },
-                                      ),
-                                    );
-                                  },
-                                  color: mSecondTextColor,
-                                  child: Text(LocaleKeys.SaveAndClose.tr(),
-                                      style: TextStyle(
-                                          color: mBackgroundColor,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Expanded(
-                                child: RaisedButton(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    LocaleKeys.SaveAndAdd.tr(),
-                                    style: TextStyle(
-                                        color: mBackgroundColor,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  color: mPrimaryTextColor,
-                                  onPressed: () {
-                                    if (_nameArabicController.text.isEmpty) {
-                                      showToast("Please Enter Arabic name");
-                                      return;
-                                    }
-                                    if (_nameEnglishController.text.isEmpty) {
-                                      showToast("Please Enter English name");
-                                      return;
-                                    }
-                                    if (_priceController.text.isEmpty) {
-                                      showToast("Please Enter price");
-                                      return;
-                                    }
-                                    if (_barCodeController.text.isEmpty) {
-                                      showToast("Please Enter  Base Barcode");
-                                      return;
-                                    }
-                                    if (lat == null) {
-                                      showToast("Please Enter  location");
-                                      return;
-                                    }
-
-                                    setState(() {
-                                      _futHSModel = saveData(
-                                          "00000000-0000-0000-0000-000000000000",
-                                          _nameArabicController.text.toString(),
-                                          _nameEnglishController.text
-                                              .toString(),
-                                          classificationDataId[
-                                                  indexOfAssetClassification]
-                                              .toString(),
-                                          _barCodeController.text.toString(),
-                                          formatter
-                                              .format(selectedDate)
-                                              .toString(),
-                                          double.parse(_priceController.text),
-                                          lat ?? 20.332232,
-                                          long ?? 2.23332,
-                                          _descriptionController.text,
-                                          "",
-                                          supplierDataId.isNotEmpty
-                                              ? supplierDataId[
-                                                      indexOfAssetSupplier]
-                                                  .toString()
-                                              : null,
-                                          locationDataId[indexOfAssetLocation]
-                                              .toString());
-                                    });
-
-                                    _barCodeController.clear();
-                                  },
-                                ),
-                              )
-                            ],
+                          alignment: Alignment.center,
+                          margin: EdgeInsets.only(
+                            left: 40,
+                            right: 40,
+                          ),
+                          padding: EdgeInsets.all(10),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(40),
+                              color: mPrimaryTextColor),
+                          child: Text(
+                            "Save Edit",
+                            style: TextStyle(
+                                color: mBackgroundColor, fontSize: 15),
                           ),
                         ),
-                      ),
+                      )
                     ],
                   )),
                 ),

@@ -1,4 +1,4 @@
-class LocationModel {
+class BranchModel {
   String responseCode;
   String responseStatus;
   String responseMessage;
@@ -7,7 +7,7 @@ class LocationModel {
   int responseCount;
   String responseAdditionalData;
 
-  LocationModel(
+  BranchModel(
       {this.responseCode,
       this.responseStatus,
       this.responseMessage,
@@ -16,7 +16,7 @@ class LocationModel {
       this.responseCount,
       this.responseAdditionalData});
 
-  LocationModel.fromJson(Map<String, dynamic> json) {
+  BranchModel.fromJson(Map<String, dynamic> json) {
     responseCode = json['response_code'];
     responseStatus = json['response_status'];
     responseMessage = json['response_message'];
