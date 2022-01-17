@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:search_choices/search_choices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'SDAssetModel.dart';
+import 'branchModel.dart';
 import 'homePage.dart';
 import 'locationModel.dart';
 import 'classificationModel.dart';
@@ -55,10 +56,15 @@ class _AddAaslState extends State<AddAasl> {
   List<String> classificationDataId = [];
   var indexOfAssetClassification;
 
-  String _myAssetLocationSelection;
-  List<String> locationData = [];
-  List<String> locationDataId = [];
-  var indexOfAssetLocation;
+  String _myAssetLocationsSelection;
+  List<String> locationsData = [];
+  List<String> locationsDataId = [];
+  var indexOfAssetLocations;
+
+  String _mybrancheSelection;
+  List<String> branchesData = [];
+  List<String> branchesDataID = [];
+  var indexOfbranches;
 
   String url =
       "http://faragmosa-001-site16.itempurl.com/api/assetapi/SaveAsset";
@@ -123,6 +129,85 @@ class _AddAaslState extends State<AddAasl> {
       uploadImage = pickedFile;
     });
     Navigator.pop(context);
+  }
+
+  Future<LocationModel> getLocationsbyBranchIdData(String branchId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('bearer');
+    var headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json'
+    };
+    var request = http.Request(
+        'POST',
+        Uri.parse(
+            'http://faragmosa-001-site16.itempurl.com/api/LocationApi/GetLocationsByBranch'));
+    request.body = json.encode({"BranchId": branchId});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      LocationModel strings = LocationModel.fromJson(
+          json.decode(await response.stream.bytesToString()));
+
+      for (var i = 0; i < strings.responseData.length; i++) {
+        locationsData.add(strings.responseData[i].locationNameAr);
+        locationsDataId.add(strings.responseData[i].locationId);
+      }
+
+      print(locationsData.toString());
+      print(locationsDataId.toString());
+
+      setState(() {
+        loading = false;
+      });
+
+      // return LocationModel.fromJson(
+      //     json.decode(await response.stream.bytesToString()));
+    } else {
+      throw Exception('Failed to load');
+    }
+  }
+
+  Future<BranchModel> getLocationsData() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('bearer');
+    var headers = {'Authorization': 'Bearer $token'};
+    var request = http.Request(
+        'GET',
+        Uri.parse(
+            'http://faragmosa-001-site16.itempurl.com/api/LocationApi/GetAllLocations'));
+
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      BranchModel strings = BranchModel.fromJson(
+          json.decode(await response.stream.bytesToString()));
+
+      for (var i = 0; i < strings.responseData.length; i++) {
+        if (strings.responseData[i].branchId == null) {
+          print("null");
+        } else {
+          branchesData.add(strings.responseData[i].branchNameAr);
+          branchesDataID.add(strings.responseData[i].branchId);
+        }
+      }
+
+      print(branchesData.toString());
+      print(branchesDataID.toString());
+
+      setState(() {
+        loading = false;
+      });
+
+      // return BranchModel.fromJson(
+      //     json.decode(await response.stream.bytesToString()));
+    } else {
+      throw Exception('Failed to load');
+    }
   }
 
   Future<void> _showChoiceDialog(BuildContext context) {
@@ -357,46 +442,16 @@ class _AddAaslState extends State<AddAasl> {
     }
   }
 
-  Future<LocationModel> getAssetLocationData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String token = prefs.getString('bearer');
-    var response = await http.get(
-        Uri.http(
-            'faragmosa-001-site16.itempurl.com', 'api/assetapi/GetLocations'),
-        headers: {'Authorization': 'Bearer $token'});
-
-    if (response.statusCode == 200) {
-      LocationModel strings =
-          LocationModel.fromJson(json.decode(response.body));
-
-      for (var i = 0; i < strings.responseData.length; i++) {
-        locationData.add(strings.responseData[i].locationNameAr);
-        locationDataId.add(strings.responseData[i].locationId);
-      }
-
-      print(locationData.toString());
-      print(locationDataId.toString());
-
-      setState(() {
-        loading = false;
-      });
-
-      return LocationModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to load');
-    }
-  }
-
   Future<ClassificationModel> assetsClassificationDataFuture;
   Future<SupplierModel> assetsSupplierDataFuture;
-  Future<LocationModel> assetsLocationDataFuture;
+  Future<BranchModel> assetsLocationDataFuture;
 
   bool loading = true;
 
   @override
   void initState() {
     assetsClassificationDataFuture = getAssetClassificationData();
-    assetsLocationDataFuture = getAssetLocationData();
+    assetsLocationDataFuture = getLocationsData();
     assetsSupplierDataFuture = getAssetSupplierData();
     super.initState();
   }
@@ -760,7 +815,7 @@ class _AddAaslState extends State<AddAasl> {
                               border: Border.all(color: Colors.grey),
                               borderRadius: BorderRadius.circular(20.0)),
                           child: SearchChoices.single(
-                            items: locationData.map((String value) {
+                            items: branchesData.map((String value) {
                               return new DropdownMenuItem<String>(
                                 value: value,
                                 child: Padding(
@@ -769,21 +824,77 @@ class _AddAaslState extends State<AddAasl> {
                                 ),
                               );
                             }).toList(),
-                            value: _myAssetLocationSelection,
-                            hint: LocaleKeys.Location.tr(),
+                            value: _mybrancheSelection,
+                            hint: EasyLocalization.of(context).locale ==
+                                    Locale("en")
+                                ? "Branch"
+                                : "الفرع",
                             searchHint: "Select one",
                             onChanged: (String newValue) {
                               setState(() {
-                                _myAssetLocationSelection = newValue;
+                                _mybrancheSelection = newValue;
 
-                                indexOfAssetLocation =
-                                    locationData.indexOf(newValue);
+                                print(_mybrancheSelection);
+
+                                indexOfbranches =
+                                    branchesData.indexOf(newValue);
+
+                                print(branchesDataID[indexOfbranches]);
+
+                                setState(() {
+                                  loading = true;
+                                  locationsData.clear();
+                                  locationsDataId.clear();
+                                  getLocationsbyBranchIdData(
+                                      branchesDataID[indexOfbranches]);
+                                  loading = false;
+                                });
                               });
                             },
                             isExpanded: true,
                           ),
                         ),
                       ),
+                      locationsData.isEmpty
+                          ? Container()
+                          : Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.only(right: 10, left: 10),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(20.0)),
+                                child: SearchChoices.single(
+                                  items: locationsData.map((String value) {
+                                    return new DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 10.0),
+                                        child: new Text(value),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  value: _myAssetLocationsSelection,
+                                  hint: LocaleKeys.Location.tr(),
+                                  searchHint: "Select one",
+                                  onChanged: (String newValue) {
+                                    setState(() {
+                                      _myAssetLocationsSelection = newValue;
+
+                                      print(_myAssetLocationsSelection);
+
+                                      indexOfAssetLocations =
+                                          locationsData.indexOf(newValue);
+                                    });
+                                  },
+                                  isExpanded: true,
+                                ),
+                              ),
+                            ),
                       Padding(
                         padding: const EdgeInsets.all(10.0),
                         child: TextField(
@@ -864,7 +975,7 @@ class _AddAaslState extends State<AddAasl> {
                                                       indexOfAssetSupplier]
                                                   .toString()
                                               : null,
-                                          locationDataId[indexOfAssetLocation]
+                                          locationsData[indexOfAssetLocations]
                                               .toString());
                                     });
 
@@ -944,7 +1055,7 @@ class _AddAaslState extends State<AddAasl> {
                                                       indexOfAssetSupplier]
                                                   .toString()
                                               : null,
-                                          locationDataId[indexOfAssetLocation]
+                                          locationsDataId[indexOfAssetLocations]
                                               .toString());
                                     });
 
