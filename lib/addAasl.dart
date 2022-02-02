@@ -300,7 +300,8 @@ class _AddAaslState extends State<AddAasl> {
       String assetDescription,
       String qrcode,
       String supplierId,
-      String locationId) async {
+      String locationId,
+      String branchId) async {
     final assetsData = {
       "AssetId": assetId,
       "AssetNameAr": assetNameAr,
@@ -316,6 +317,7 @@ class _AddAaslState extends State<AddAasl> {
       "Qrcode": qrcode,
       "SupplierId": supplierId,
       "LocationId": locationId,
+      "BranchId": branchId,
       "AssetImage": uploadedImageUrl == null ? "" : uploadedImageUrl
     };
 
@@ -953,6 +955,15 @@ class _AddAaslState extends State<AddAasl> {
                                         showToast("Please Enter  location");
                                         return;
                                       }
+                                      if (_myAssetLocationsSelection == null) {
+                                        showToast(
+                                            "Please Enter  Drop Down Location");
+                                        return;
+                                      }
+                                      if (_mybrancheSelection == null) {
+                                        showToast("Please Enter  branch");
+                                        return;
+                                      }
                                       _futHSModel = saveData(
                                           "00000000-0000-0000-0000-000000000000",
                                           _nameArabicController.text.toString(),
@@ -975,7 +986,9 @@ class _AddAaslState extends State<AddAasl> {
                                                       indexOfAssetSupplier]
                                                   .toString()
                                               : null,
-                                          locationsData[indexOfAssetLocations]
+                                          locationsDataId[indexOfAssetLocations]
+                                              .toString(),
+                                          branchesDataID[indexOfbranches]
                                               .toString());
                                     });
 
@@ -1031,6 +1044,15 @@ class _AddAaslState extends State<AddAasl> {
                                       showToast("Please Enter  location");
                                       return;
                                     }
+                                    if (_myAssetLocationsSelection == null) {
+                                      showToast(
+                                          "Please Enter  Drop Down Location");
+                                      return;
+                                    }
+                                    if (_mybrancheSelection == null) {
+                                      showToast("Please Enter  branch");
+                                      return;
+                                    }
 
                                     setState(() {
                                       _futHSModel = saveData(
@@ -1056,6 +1078,8 @@ class _AddAaslState extends State<AddAasl> {
                                                   .toString()
                                               : null,
                                           locationsDataId[indexOfAssetLocations]
+                                              .toString(),
+                                          branchesDataID[indexOfbranches]
                                               .toString());
                                     });
 

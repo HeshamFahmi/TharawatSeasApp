@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:search_choices/search_choices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tharawatseas/basebarcodemodel.dart';
+import 'package:tharawatseas/editAssetModel.dart';
 import 'SDAssetModel.dart';
 import 'branchModel.dart';
 import 'homePage.dart';
@@ -306,7 +307,8 @@ class _EditAssetState extends State<EditAsset> {
       String assetDescription,
       String qrcode,
       String supplierId,
-      String locationId) async {
+      String locationId,
+      String branchId) async {
     final assetsData = {
       "AssetId": assetId,
       "AssetNameAr": assetNameAr,
@@ -322,6 +324,7 @@ class _EditAssetState extends State<EditAsset> {
       "Qrcode": qrcode,
       "SupplierId": supplierId,
       "LocationId": locationId,
+      "BranchId": branchId,
       "isActive": true,
     };
 
@@ -473,7 +476,37 @@ class _EditAssetState extends State<EditAsset> {
   Future<SupplierModel> assetsSupplierDataFuture;
   Future<BranchModel> assetsLocationDataFuture;
 
+  EditAssetModel editAssetModel;
+
   bool loading = true;
+
+  getAssetDtailsByAssetId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('bearer');
+    var headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json'
+    };
+    var request = http.Request(
+        'POST',
+        Uri.parse(
+            'http://faragmosa-001-site16.itempurl.com/api/AssetApi/FindAssetDetails'));
+    request.body = json.encode({"Param1": widget.astDetails.assetId});
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      editAssetModel = EditAssetModel.fromJson(
+          jsonDecode(await response.stream.bytesToString()));
+
+      Future.delayed(Duration(seconds: 3));
+
+      getLocationsbyBranchIdData(editAssetModel.responseData.branchId);
+    } else {
+      print(response.reasonPhrase);
+    }
+  }
 
   @override
   void initState() {
@@ -481,6 +514,7 @@ class _EditAssetState extends State<EditAsset> {
     assetsLocationDataFuture = getLocationsData();
     assetsSupplierDataFuture = getAssetSupplierData();
     getbasebarcodebylocationid();
+    getAssetDtailsByAssetId();
     super.initState();
   }
 
@@ -860,56 +894,114 @@ class _EditAssetState extends State<EditAsset> {
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.only(right: 10, left: 10),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(20.0)),
-                          child: SearchChoices.single(
-                            items: branchesData.map((String value) {
-                              return new DropdownMenuItem<String>(
-                                value: value,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 10.0),
-                                  child: new Text(value),
+                      editAssetModel.responseData.branchNameAr == null
+                          ? Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.only(right: 10, left: 10),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(20.0)),
+                                child: SearchChoices.single(
+                                  items: branchesData.map((String value) {
+                                    return new DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 10.0),
+                                        child: new Text(value),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  value: _mybrancheSelection,
+                                  hint: EasyLocalization.of(context).locale ==
+                                          Locale("en")
+                                      ? "Branch"
+                                      : "الفرع",
+                                  searchHint: "Select one",
+                                  onChanged: (String newValue) {
+                                    setState(() {
+                                      _mybrancheSelection = newValue;
+
+                                      print(_mybrancheSelection);
+
+                                      indexOfbranches =
+                                          branchesData.indexOf(newValue);
+
+                                      print(branchesDataID[indexOfbranches]);
+
+                                      setState(() {
+                                        loading = true;
+                                        locationsData.clear();
+                                        locationsDataId.clear();
+                                        getLocationsbyBranchIdData(
+                                            branchesDataID[indexOfbranches]);
+                                        loading = false;
+                                      });
+                                    });
+                                  },
+                                  isExpanded: true,
                                 ),
-                              );
-                            }).toList(),
-                            value: _mybrancheSelection,
-                            hint: EasyLocalization.of(context).locale ==
-                                    Locale("en")
-                                ? "Branch"
-                                : "الفرع",
-                            searchHint: "Select one",
-                            onChanged: (String newValue) {
-                              setState(() {
-                                _mybrancheSelection = newValue;
+                              ),
+                            )
+                          : Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.only(right: 10, left: 10),
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    border: Border.all(color: Colors.grey),
+                                    borderRadius: BorderRadius.circular(20.0)),
+                                child: SearchChoices.single(
+                                  items: branchesData.map((String value) {
+                                    return new DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 10.0),
+                                        child: new Text(value),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  value:
+                                      editAssetModel.responseData.branchNameAr,
+                                  hint: EasyLocalization.of(context).locale ==
+                                          Locale("en")
+                                      ? "Branch"
+                                      : "الفرع",
+                                  searchHint: "Select one",
+                                  onChanged: (String newValue) {
+                                    setState(() {
+                                      editAssetModel.responseData.branchNameAr =
+                                          newValue;
 
-                                print(_mybrancheSelection);
+                                      print(editAssetModel
+                                          .responseData.branchNameAr);
 
-                                indexOfbranches =
-                                    branchesData.indexOf(newValue);
+                                      indexOfbranches =
+                                          branchesData.indexOf(newValue);
 
-                                print(branchesDataID[indexOfbranches]);
+                                      print(branchesDataID[indexOfbranches]);
 
-                                setState(() {
-                                  loading = true;
-                                  locationsData.clear();
-                                  locationsDataId.clear();
-                                  getLocationsbyBranchIdData(
-                                      branchesDataID[indexOfbranches]);
-                                  loading = false;
-                                });
-                              });
-                            },
-                            isExpanded: true,
-                          ),
-                        ),
-                      ),
+                                      setState(() {
+                                        loading = true;
+                                        locationsData.clear();
+                                        locationsDataId.clear();
+                                        getLocationsbyBranchIdData(
+                                            branchesDataID[indexOfbranches]);
+                                        loading = false;
+                                      });
+                                    });
+                                  },
+                                  isExpanded: true,
+                                ),
+                              ),
+                            ),
                       locationsData.isEmpty
                           ? Container()
                           : Padding(
@@ -933,14 +1025,17 @@ class _EditAssetState extends State<EditAsset> {
                                       ),
                                     );
                                   }).toList(),
-                                  value: _myAssetLocationsSelection,
+                                  value: editAssetModel
+                                      .responseData.locationNameAr,
                                   hint: LocaleKeys.Location.tr(),
                                   searchHint: "Select one",
                                   onChanged: (String newValue) {
                                     setState(() {
-                                      _myAssetLocationsSelection = newValue;
+                                      editAssetModel.responseData
+                                          .locationNameAr = newValue;
 
-                                      print(_myAssetLocationsSelection);
+                                      print(editAssetModel
+                                          .responseData.locationNameAr);
 
                                       indexOfAssetLocations =
                                           locationsData.indexOf(newValue);
@@ -1008,6 +1103,11 @@ class _EditAssetState extends State<EditAsset> {
                                 indexOfAssetLocations == null
                                     ? widget.astDetails.locationId.toString()
                                     : locationsDataId[indexOfAssetLocations]
+                                        .toString(),
+                                indexOfbranches == null
+                                    ? editAssetModel.responseData.branchId
+                                        .toString()
+                                    : branchesDataID[indexOfbranches]
                                         .toString());
                           });
                         },
